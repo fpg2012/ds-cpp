@@ -5,11 +5,20 @@ project(DeepSeekChat)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# 引入FetchContent模块
+include(FetchContent)
+
+# 下载zlib源码
+FetchContent_Declare(
+    zlib
+    URL http://zlib.net/zlib-1.3.1.tar.gz
+)
+
 # 查找依赖库
 find_package(OpenGL REQUIRED)
-find_package(glfw3 REQUIRED)
-find_package(nlohmann_json REQUIRED)
-find_package(ZLIB REQUIRED)
+# find_package(glfw3 REQUIRED)
+# find_package(nlohmann_json REQUIRED)
+# find_package(ZLIB REQUIRED)
 find_package(Freetype REQUIRED)
 
 # 添加 imgui 库
@@ -19,6 +28,8 @@ set(THIRDPARTY_DIR ${CMAKE_SOURCE_DIR}/thirdparty)
 
 # 添加 cpr 库
 add_subdirectory(${THIRDPARTY_DIR}/cpr)
+add_subdirectory(${THIRDPARTY_DIR}/nlohmann_json)
+add_subdirectory(${THIRDPARTY_DIR}/glfw)
 
 # 包含目录
 include_directories(
@@ -58,7 +69,7 @@ target_link_libraries(deepseek_chat
     cpr::cpr
     OpenGL::GL
     glfw
-    ZLIB::ZLIB
+    zlibstatic
     Freetype::Freetype
     ${CMAKE_DL_LIBS}
 )

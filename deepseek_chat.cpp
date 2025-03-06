@@ -22,9 +22,7 @@
 
 #include "ttf/fonts.h"
 
-// extern constexpr unsigned char *fusion_pixel_12px_monospaced_zh_hant_ttf;
-// extern constexpr unsigned char *NotoEmoji_Regular_ttf;
-
+bool disable_backspace = false;
 
 std::string get_today_date() {
     auto t = std::time(nullptr);
@@ -79,7 +77,7 @@ std::string read_api_key(const std::string& config_file) {
 }
 
 void my_key_call_back(GLFWwindow* window, int key, int scancode, int action, int mods) {
-    if (key == GLFW_KEY_BACKSPACE) {
+    if (disable_backspace && key == GLFW_KEY_BACKSPACE) {
         // 忽略退格键的事件，不做任何处理
         return;
     }
@@ -357,6 +355,9 @@ void chat_with_deepseek(const std::string& api_key, const std::string& message) 
 
 // 主函数
 int main() {
+    auto buf = new char[1024 * 64];
+    size_t buf_len = 1024*64 - 10;
+
     // 初始化 GLFW 和 ImGui（省略部分代码）
     std::string api_key = read_api_key("config.txt");
     if (api_key.empty()) {
@@ -389,20 +390,19 @@ int main() {
     ImGui::StyleColorsDark();
 
     // 加载中文字体
-    // io.Fonts->AddFontFromFileTTF("fusion-pixel-12px-monospaced-zh_hant.ttf", 18.0f, nullptr, io.Fonts->GetGlyphRangesChineseFull());
-    void *ptr1 = const_cast<void*>(reinterpret_cast<const void*>(fusion_pixel_12px_monospaced_zh_hant_ttf));
+    // you don't need to free ptr1 & ptr2, because their ownership are transferred to ImGui
+    unsigned char *ptr1 = new unsigned char[fusion_pixel_12px_monospaced_zh_hant_ttf_len];
+    memcpy(ptr1, fusion_pixel_12px_monospaced_zh_hant_ttf, fusion_pixel_12px_monospaced_zh_hant_ttf_len);
     io.Fonts->AddFontFromMemoryTTF(ptr1, fusion_pixel_12px_monospaced_zh_hant_ttf_len, 18.0f, nullptr, io.Fonts->GetGlyphRangesChineseFull());
-    // ImFontConfig config;
-    // config.MergeMode = true;
-    // config.GlyphOffset.y = 4.0f;
-    // static const ImWchar emoji_ranges[] = { 0x1F600, 0x1F64F, 0 };
+
     static ImWchar ranges[] = { 0x1, 0x1FFFF, 0 };
     static ImFontConfig cfg;
     cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_LoadColor;
     cfg.OversampleH = cfg.OversampleV = 1;
     cfg.MergeMode = true;
     // io.Fonts->AddFontFromFileTTF("NotoEmoji-Regular.ttf", 18.0f, &cfg, ranges);
-    void *ptr2 = const_cast<void*>(reinterpret_cast<const void*>(NotoEmoji_Regular_ttf));
+    unsigned char *ptr2 = new unsigned char[NotoEmoji_Regular_ttf_len];
+    memcpy(ptr2, NotoEmoji_Regular_ttf, NotoEmoji_Regular_ttf_len);
     io.Fonts->AddFontFromMemoryTTF(ptr2, NotoEmoji_Regular_ttf_len, 18.0f, &cfg, ranges);
     io.Fonts->Build();
 
@@ -430,10 +430,11 @@ int main() {
         
         if (ImGui::CollapsingHeader("API Key Configuration")) {
             ImGui::Text("API Key:");
-            ImGui::PushItemWidth(ImGui::GetWindowWidth());
+            ImGui::PushItemWidth(ImGui::GetWindowWidth() - 10);
             if (ImGui::InputText("##API_KEY", api_key.data(), api_key.size(), ImGuiInputTextFlags_EnterReturnsTrue)) {
                 api_key = api_key.substr(0, api_key.find('\0'));
             }
+            ImGui::Checkbox("Disable Backspace", &disable_backspace);
             ImGui::PopItemWidth();
         }
 
@@ -477,13 +478,13 @@ int main() {
         // 输入框和发送按钮
         bool send_message = false;
         ImGui::PushItemWidth(ImGui::GetWindowWidth());
-        if (ImGui::InputTextMultiline("##Input", input_text.data(), input_text.size(), ImVec2(-1, ImGui::GetTextLineHeight() * 4), ImGuiInputTextFlags_None)) {
+        if (ImGui::InputTextMultiline("##Input", buf, buf_len, ImVec2(-1, ImGui::GetTextLineHeight() * 4), ImGuiInputTextFlags_None)) {
             // 检测 Ctrl+回车
             if (io.KeyCtrl && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter))) {
                 send_message = true;
             } else if (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter)) {
                 // 单独按下回车，插入换行符
-                std::string current_input(input_text.data());
+                std::string current_input(reinterpret_cast<const char*>(buf));
                 size_t cursor_pos = current_input.find('\0');
                 if (cursor_pos != std::string::npos) {
                     current_input.insert(cursor_pos, "\n");
