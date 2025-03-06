@@ -451,9 +451,6 @@ int main() {
                 // 设置文本颜色为红色
                 ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 0, 0, 255));
             }
-            // static char buffer[1024 * 64]; // 用于存储每条消息的缓冲区
-            // strncpy(buffer, message.c_str(), sizeof(buffer));
-            // ImGui::InputTextMultiline(("##" + message).c_str(), buffer, sizeof(buffer), ImVec2(wrap_width, calculate_text_height(message, wrap_width) + 10), ImGuiInputTextFlags_NoHorizontalScroll | ImGuiInputTextFlags_ReadOnly);
             ImGui::TextWrapped("%s", message.c_str());
             if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) {
                 ImGui::SetClipboardText(message.c_str());
@@ -478,13 +475,13 @@ int main() {
         // 输入框和发送按钮
         bool send_message = false;
         ImGui::PushItemWidth(ImGui::GetWindowWidth());
-        if (ImGui::InputTextMultiline("##Input", buf, buf_len, ImVec2(-1, ImGui::GetTextLineHeight() * 4), ImGuiInputTextFlags_None)) {
+        if (ImGui::InputTextMultiline("##Input", input_text.data(), input_text.size(), ImVec2(-1, ImGui::GetTextLineHeight() * 4), ImGuiInputTextFlags_None)) {
             // 检测 Ctrl+回车
             if (io.KeyCtrl && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter))) {
                 send_message = true;
             } else if (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter)) {
                 // 单独按下回车，插入换行符
-                std::string current_input(reinterpret_cast<const char*>(buf));
+                std::string current_input(input_text);
                 size_t cursor_pos = current_input.find('\0');
                 if (cursor_pos != std::string::npos) {
                     current_input.insert(cursor_pos, "\n");
