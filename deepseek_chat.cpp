@@ -1,5 +1,7 @@
+#include <cstddef>
 #include <cstdlib>
 #include <iomanip>
+#include <ios>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -19,6 +21,7 @@
 #include "ImGuiFileDialog.h"
 #include <ctime>
 #include <random>
+#include <argparse/argparse.hpp>
 
 #include "ttf/fonts.h"
 
@@ -56,24 +59,62 @@ std::condition_variable cv;
 bool new_message = false;
 
 // 对话历史记录
-std::vector<json> chat_history = {
-    {{"role", "system"}, {"content", "You are a helpful assistant."}}
-};
+std::vector<json> chat_history;
 
 // 文件名
 bool filename_generated = false;
 std::string filename;
 
+struct AppConfig {
+    std::string api_key;
+    std::string model;
+    std::string system_prompt;
+    std::string save_path;
+};
+
 // 从配置文件读取 API 密钥
-std::string read_api_key(const std::string& config_file) {
-    std::ifstream file(config_file);
+// std::string read_api_key(const std::string& config_file) {
+//     std::ifstream file(config_file);
+//     if (!file.is_open()) {
+//         std::cerr << "Failed to open config file: " << config_file << std::endl;
+//         return "";
+//     }
+//     std::string api_key;
+//     std::getline(file, api_key);
+//     return api_key;
+// }
+
+AppConfig read_config(const std::string& config_file) {
+    std::ifstream file(config_file, std::ios::ate);
+    AppConfig config = AppConfig{
+        "no_api_key",
+        "deepseek-chat",
+        "You are a helpful assistant.",
+        "chat_history"
+    };
     if (!file.is_open()) {
         std::cerr << "Failed to open config file: " << config_file << std::endl;
-        return "";
+        return config;
     }
-    std::string api_key;
-    std::getline(file, api_key);
-    return api_key;
+    std::size_t file_size = file.tellg();
+    file.seekg(0, std::ios_base::beg);
+
+    std::string content;
+    content.resize(file_size + 10);
+    file.read(content.data(), file_size);
+
+    json config_json = json::parse(content);
+
+    if (config_json.contains("api-key"))
+        config.api_key = config_json["api-key"];
+    if (config_json.contains("model"))
+        config.model = config_json["model"];
+    if (config_json.contains("system-prompt"))
+        config.system_prompt = config_json["system-prompt"];
+    if (config_json.contains("save_path"))
+        config.save_path = config_json["save_path"];
+
+    return config;
 }
 
 void my_key_call_back(GLFWwindow* window, int key, int scancode, int action, int mods) {
@@ -288,18 +329,18 @@ void auto_save_chat_history() {
 }
 
 // 调用 DeepSeek API 进行聊天
-void chat_with_deepseek(const std::string& api_key, const std::string& message) {
+void chat_with_deepseek(const AppConfig &config, const std::string& message) {
     // 添加用户消息到历史记录
     chat_history.push_back({{"role", "user"}, {"content", message}});
 
     // 如果是第一轮对话，生成文件名
     if (chat_history.size() == 2) { // 第一轮对话（system + user）
-        start_filename_generation(api_key, message);
+        start_filename_generation(config.api_key, message);
     }
 
     // 构造请求体
     json request_body = {
-        {"model", "deepseek-chat"},
+        {"model", config.model},
         {"messages", chat_history},
         {"stream", true} // 启用流式传输
     };
@@ -308,7 +349,7 @@ void chat_with_deepseek(const std::string& api_key, const std::string& message) 
     cpr::Response response = cpr::Post(
         cpr::Url{"https://api.deepseek.com/chat/completions"},
         cpr::Header{
-            {"Authorization", "Bearer " + api_key},
+            {"Authorization", "Bearer " + config.api_key},
             {"Content-Type", "application/json"}
         },
         cpr::Body{request_body.dump()},
@@ -354,12 +395,33 @@ void chat_with_deepseek(const std::string& api_key, const std::string& message) 
 }
 
 // 主函数
-int main() {
-    auto buf = new char[1024 * 64];
-    size_t buf_len = 1024*64 - 10;
+int main(int argc, char **argv) {
+    std::string api_key = "no_api_key";
+    std::string config_path = "config.json";
+    
+    argparse::ArgumentParser program("deepseek_chat");
+    program.add_argument("--config").help("path to config.json").default_value("config.json").store_into(config_path);
+    program.add_argument("--api-key").default_value("no_api_key").store_into(api_key);
+    program.add_argument("--disable-backspace").default_value(false).store_into(disable_backspace);
+    try {
+        program.parse_args(argc, argv);    // Example: ./main --color orange
+    }
+    catch (const std::exception& err) {
+        std::cerr << err.what() << std::endl;
+        std::cerr << program;
+        std::exit(1);
+    }
+
+    AppConfig config = read_config(config_path);
+    if (api_key != "no_api_key") {
+        config.api_key = api_key;
+    } else {
+        api_key = config.api_key;
+    }
+    chat_history.push_back({{"role", "system"}, {"content", config.system_prompt}});
+    file_prefix = config.save_path;
 
     // 初始化 GLFW 和 ImGui（省略部分代码）
-    std::string api_key = read_api_key("config.txt");
     if (api_key.empty()) {
         std::cerr << "API key is empty. Please check your config file." << std::endl;
         // return -1;
@@ -495,7 +557,7 @@ int main() {
         if (ImGui::Button("Send", ImVec2(-1, 0)) || send_message) {
             std::string user_input(input_text.data()); // 截断到实际内容
             messages.push_back("You: " + user_input);
-            std::thread(chat_with_deepseek, api_key, user_input).detach();
+            std::thread(chat_with_deepseek, config, user_input).detach();
             input_text.clear();
             input_text.resize(1024 * 64); // 重置缓冲区大小
         }

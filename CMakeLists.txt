@@ -38,6 +38,7 @@ include_directories(
     ${THIRDPARTY_DIR}/imgui/backends
     ${THIRDPARTY_DIR}/ImGuiFileDialog
     ${THIRDPARTY_DIR}/imgui/misc/freetype
+    ${THIRDPARTY_DIR}/argparse/include
 )
 
 # 添加 imgui 源文件

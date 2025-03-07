@@ -13,3 +13,6 @@
 [submodule "thirdparty/glfw"]
 	path = thirdparty/glfw
 	url = git@github.com:glfw/glfw
+[submodule "thirdparty/argparse"]
+	path = thirdparty/argparse
+	url = git@github.com:p-ranav/argparse.git
