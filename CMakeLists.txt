@@ -8,18 +8,28 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # 引入FetchContent模块
 include(FetchContent)
 
+set(BUILD_SHARED_LIBS OFF)
+
 # 下载zlib源码
 FetchContent_Declare(
     zlib
     URL http://zlib.net/zlib-1.3.1.tar.gz
 )
 
+FetchContent_Declare(
+  freetype
+  GIT_REPOSITORY https://github.com/freetype/freetype.git
+  GIT_TAG        VER-2-13-2  # 替换为你需要的版本或分支
+)
+
+FetchContent_MakeAvailable(freetype)
+
 # 查找依赖库
 find_package(OpenGL REQUIRED)
 # find_package(glfw3 REQUIRED)
 # find_package(nlohmann_json REQUIRED)
 # find_package(ZLIB REQUIRED)
-find_package(Freetype REQUIRED)
+# find_package(Freetype REQUIRED)
 
 # 添加 imgui 库
 # add_subdirectory(imgui)
@@ -28,7 +38,7 @@ set(THIRDPARTY_DIR ${CMAKE_SOURCE_DIR}/thirdparty)
 
 # 添加 cpr 库
 add_subdirectory(${THIRDPARTY_DIR}/cpr)
-add_subdirectory(${THIRDPARTY_DIR}/nlohmann_json)
+# add_subdirectory(${THIRDPARTY_DIR}/nlohmann_json)
 add_subdirectory(${THIRDPARTY_DIR}/glfw)
 
 # 包含目录
@@ -39,6 +49,7 @@ include_directories(
     ${THIRDPARTY_DIR}/ImGuiFileDialog
     ${THIRDPARTY_DIR}/imgui/misc/freetype
     ${THIRDPARTY_DIR}/argparse/include
+    ${THIRDPARTY_DIR}/nlohmann_json
 )
 
 # 添加 imgui 源文件
@@ -71,7 +82,7 @@ target_link_libraries(deepseek_chat
     OpenGL::GL
     glfw
     zlibstatic
-    Freetype::Freetype
+    freetype
     ${CMAKE_DL_LIBS}
 )
 

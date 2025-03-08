@@ -23,6 +23,10 @@
 #include <random>
 #include <argparse/argparse.hpp>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 #include "ttf/fonts.h"
 
 bool disable_backspace = false;
@@ -47,8 +51,12 @@ std::string get_random_number() {
 using json = nlohmann::json;
 
 // 全局变量
-
+#ifndef _WIN32
 std::string file_prefix = "chat_history/";
+#else
+std::string file_prefix = "chat_history\\";
+#endif
+
 std::string file_ext = ".json.zstd";
 std::future<std::string> filename_future;
 std::future<void> save_future;
@@ -70,7 +78,18 @@ struct AppConfig {
     std::string model;
     std::string system_prompt;
     std::string save_path;
+
+    static AppConfig get_default();
 };
+
+AppConfig AppConfig::get_default() {
+    return AppConfig{
+        "no_api_key",
+        "deepseek-chat",
+        "You are a helpful assistant.",
+        "chat_history"
+    };
+}
 
 // 从配置文件读取 API 密钥
 // std::string read_api_key(const std::string& config_file) {
@@ -84,14 +103,8 @@ struct AppConfig {
 //     return api_key;
 // }
 
-AppConfig read_config(const std::string& config_file) {
+AppConfig read_config(const std::string& config_file, AppConfig& config) {
     std::ifstream file(config_file, std::ios::ate);
-    AppConfig config = AppConfig{
-        "no_api_key",
-        "deepseek-chat",
-        "You are a helpful assistant.",
-        "chat_history"
-    };
     if (!file.is_open()) {
         std::cerr << "Failed to open config file: " << config_file << std::endl;
         return config;
@@ -396,12 +409,15 @@ void chat_with_deepseek(const AppConfig &config, const std::string& message) {
 
 // 主函数
 int main(int argc, char **argv) {
-    std::string api_key = "no_api_key";
+#ifdef _WIN32
+    FreeConsole();
+#endif
+    AppConfig config = AppConfig::get_default();
     std::string config_path = "config.json";
     
     argparse::ArgumentParser program("deepseek_chat");
     program.add_argument("--config").help("path to config.json").default_value("config.json").store_into(config_path);
-    program.add_argument("--api-key").default_value("no_api_key").store_into(api_key);
+    program.add_argument("--api-key").default_value("no_api_key").store_into(config.api_key);
     program.add_argument("--disable-backspace").default_value(false).store_into(disable_backspace);
     try {
         program.parse_args(argc, argv);    // Example: ./main --color orange
@@ -412,22 +428,17 @@ int main(int argc, char **argv) {
         std::exit(1);
     }
 
-    AppConfig config = read_config(config_path);
-    if (api_key != "no_api_key") {
-        config.api_key = api_key;
-    } else {
-        api_key = config.api_key;
-    }
+    // AppConfig config = read_config(config_path);
     chat_history.push_back({{"role", "system"}, {"content", config.system_prompt}});
     file_prefix = config.save_path;
 
     // 初始化 GLFW 和 ImGui（省略部分代码）
-    if (api_key.empty()) {
+    if (config.api_key.empty()) {
         std::cerr << "API key is empty. Please check your config file." << std::endl;
         // return -1;
-        api_key = "no api key!!!";
+        config.api_key = "no api key!!!";
     }
-    api_key.resize(256);
+    config.api_key.resize(256);
 
     // 初始化 GLFW
     if (!glfwInit()) {
@@ -493,8 +504,8 @@ int main(int argc, char **argv) {
         if (ImGui::CollapsingHeader("API Key Configuration")) {
             ImGui::Text("API Key:");
             ImGui::PushItemWidth(ImGui::GetWindowWidth() - 10);
-            if (ImGui::InputText("##API_KEY", api_key.data(), api_key.size(), ImGuiInputTextFlags_EnterReturnsTrue)) {
-                api_key = api_key.substr(0, api_key.find('\0'));
+            if (ImGui::InputText("##API_KEY", config.api_key.data(), config.api_key.size(), ImGuiInputTextFlags_EnterReturnsTrue)) {
+                config.api_key = config.api_key.substr(0, config.api_key.find('\0'));
             }
             ImGui::Checkbox("Disable Backspace", &disable_backspace);
             ImGui::PopItemWidth();
