@@ -26,8 +26,10 @@
 #ifdef _WIN32
 #include <windows.h>
 #endif
+#include "version.h"
 
 #include "ttf/fonts.h"
+
 
 bool disable_backspace = false;
 
@@ -416,6 +418,11 @@ int main(int argc, char **argv) {
     std::string config_path = "config.json";
     
     argparse::ArgumentParser program("deepseek_chat");
+    
+    std::stringstream description;
+    description << "ds-cpp (" << GIT_COMMIT_HASH << ")\nhttps://github.com/fpg2012/ds-cpp";
+
+    program.add_description(description.str());
     program.add_argument("--config").help("path to config.json").default_value("config.json").store_into(config_path);
     program.add_argument("--api-key").default_value("no_api_key").store_into(config.api_key);
     program.add_argument("--disable-backspace").default_value(false).store_into(disable_backspace);

@@ -5,6 +5,19 @@ project(DeepSeekChat)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+execute_process(
+    COMMAND git rev-parse --short=8 HEAD
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_VARIABLE GIT_COMMIT_HASH
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+configure_file(
+    ${CMAKE_SOURCE_DIR}/version.h.in
+    ${CMAKE_BINARY_DIR}/version.h
+    @ONLY
+)
+
 # 引入FetchContent模块
 include(FetchContent)
 
@@ -71,12 +84,14 @@ set(FONT_SOURCES
 )
 
 # 添加可执行文件
-add_executable(deepseek_chat deepseek_chat.cpp ${FONT_SOURCES} ${IMGUI_SOURCES})
+add_executable(ds-cpp deepseek_chat.cpp ${FONT_SOURCES} ${IMGUI_SOURCES})
 
-target_compile_definitions(deepseek_chat PRIVATE IMGUI_USE_WCHAR32)
+target_compile_definitions(ds-cpp PRIVATE IMGUI_USE_WCHAR32)
+
+target_include_directories(ds-cpp PRIVATE ${CMAKE_BINARY_DIR})
 
 # 链接库
-target_link_libraries(deepseek_chat
+target_link_libraries(ds-cpp
     PRIVATE
     cpr::cpr
     OpenGL::GL
@@ -88,5 +103,5 @@ target_link_libraries(deepseek_chat
 
 # 设置编译选项
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(deepseek_chat PRIVATE -Wall -Wextra -pedantic)
+    target_compile_options(ds-cpp PRIVATE -Wall -Wextra -pedantic)
 endif()
