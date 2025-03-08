@@ -429,6 +429,7 @@ int main(int argc, char **argv) {
     }
 
     // AppConfig config = read_config(config_path);
+    read_config(config_path, config);
     chat_history.push_back({{"role", "system"}, {"content", config.system_prompt}});
     file_prefix = config.save_path;
 
@@ -447,7 +448,7 @@ int main(int argc, char **argv) {
     }
 
     // 创建窗口
-    GLFWwindow* window = glfwCreateWindow(400, 600, "DeepSeek Chat", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(600, 600, "DeepSeek Chat", NULL, NULL);
     if (!window) {
         std::cerr << "Failed to create GLFW window\n";
         glfwTerminate();
