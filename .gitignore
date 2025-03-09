@@ -4,3 +4,4 @@ build-ninja/
 out/
 .vs/
 CMakeSettings.json
+thirdparty/

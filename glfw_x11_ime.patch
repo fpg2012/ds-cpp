@@ -1,0 +1,37 @@
+diff --git a/src/x11_window.c b/src/x11_window.c
+index 322349f..1ab7b23 100644
+--- a/src/x11_window.c
++++ b/src/x11_window.c
+@@ -1149,8 +1149,11 @@ static void processEvent(XEvent *event)
+     Bool filtered = False;
+ 
+     // HACK: Save scancode as some IMs clear the field in XFilterEvent
+-    if (event->type == KeyPress || event->type == KeyRelease)
++    if (event->type == KeyPress || event->type == KeyRelease) {
+         keycode = event->xkey.keycode;
++        // printf("keycode: 0x%hd\n", keycode);
++        // fflush(stdout);
++    }
+ 
+     filtered = XFilterEvent(event, None);
+ 
+@@ -1242,6 +1245,9 @@ static void processEvent(XEvent *event)
+ 
+         case KeyPress:
+         {
++            if (filtered) {
++                return;
++            }
+             const int key = translateKey(keycode);
+             const int mods = translateState(event->xkey.state);
+             const int plain = !(mods & (GLFW_MOD_CONTROL | GLFW_MOD_ALT));
+@@ -1314,6 +1320,9 @@ static void processEvent(XEvent *event)
+ 
+         case KeyRelease:
+         {
++            if (filtered) {
++                return;
++            }
+             const int key = translateKey(keycode);
+             const int mods = translateState(event->xkey.state);
+ 

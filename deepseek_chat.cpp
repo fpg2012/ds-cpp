@@ -421,7 +421,7 @@ int main(int argc, char **argv) {
     std::string config_path = "config.json";
     bool use_wayland = false;
     
-    argparse::ArgumentParser program("deepseek_chat");
+    argparse::ArgumentParser program("ds-cpp");
     
     std::stringstream description;
     description << "ds-cpp (" << GIT_COMMIT_HASH << ")\nhttps://github.com/fpg2012/ds-cpp";
