@@ -8,28 +8,31 @@
 #include <thread>
 #include <mutex>
 #include <condition_variable>
-#include <cpr/cpr.h>
-#include <nlohmann/json.hpp>
-#include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h"
-#include "imgui_freetype.h"
-#include <GLFW/glfw3.h>
-#include <fstream>
-#include <sstream>
-#include <zlib.h>
-#include "ImGuiFileDialog.h"
 #include <ctime>
 #include <random>
+#include <fstream>
+#include <sstream>
+
+#include <cpr/cpr.h>
+#include <nlohmann/json.hpp>
+#include <zlib.h>
+
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
+#include <imgui_freetype.h>
+#include <GLFW/glfw3.h>
+
+#include <ImGuiFileDialog.h>
+
 #include <argparse/argparse.hpp>
+
+#include "version.h"
+#include "ttf/fonts.h"
 
 #ifdef _WIN32
 #include <windows.h>
 #endif
-#include "version.h"
-
-#include "ttf/fonts.h"
-
 
 bool disable_backspace = false;
 
@@ -416,6 +419,7 @@ int main(int argc, char **argv) {
 #endif
     AppConfig config = AppConfig::get_default();
     std::string config_path = "config.json";
+    bool use_wayland = false;
     
     argparse::ArgumentParser program("deepseek_chat");
     
@@ -426,6 +430,7 @@ int main(int argc, char **argv) {
     program.add_argument("--config").help("path to config.json").default_value("config.json").store_into(config_path);
     program.add_argument("--api-key").default_value("no_api_key").store_into(config.api_key);
     program.add_argument("--disable-backspace").default_value(false).store_into(disable_backspace);
+    program.add_argument("--wayland").default_value(false).store_into(use_wayland);
     try {
         program.parse_args(argc, argv);    // Example: ./main --color orange
     }
@@ -447,6 +452,11 @@ int main(int argc, char **argv) {
         config.api_key = "no api key!!!";
     }
     config.api_key.resize(256);
+
+#ifdef __linux__
+    if (!use_wayland)
+        glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
+#endif
 
     // 初始化 GLFW
     if (!glfwInit()) {
