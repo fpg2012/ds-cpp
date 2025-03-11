@@ -63,6 +63,7 @@ include_directories(
     ${THIRDPARTY_DIR}/imgui/misc/freetype
     ${THIRDPARTY_DIR}/argparse/include
     ${THIRDPARTY_DIR}/nlohmann_json
+    ${THIRDPARTY_DIR}/stb
 )
 
 # 添加 imgui 源文件
@@ -83,8 +84,12 @@ set(FONT_SOURCES
     ${CMAKE_SOURCE_DIR}/ttf/noto_emoji.cpp
 )
 
+set(ICON_SOURCES
+    ${CMAKE_SOURCE_DIR}/icon/ds-cpp-64.c
+)
+
 # 添加可执行文件
-add_executable(ds-cpp deepseek_chat.cpp ${FONT_SOURCES} ${IMGUI_SOURCES})
+add_executable(ds-cpp deepseek_chat.cpp ${ICON_SOURCES} ${FONT_SOURCES} ${IMGUI_SOURCES})
 
 target_compile_definitions(ds-cpp PRIVATE IMGUI_USE_WCHAR32)
 

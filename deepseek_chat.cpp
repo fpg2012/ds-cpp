@@ -13,6 +13,8 @@
 #include <fstream>
 #include <sstream>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb/stb_image.h>
 #include <cpr/cpr.h>
 #include <nlohmann/json.hpp>
 #include <zlib.h>
@@ -29,6 +31,7 @@
 
 #include "version.h"
 #include "ttf/fonts.h"
+#include "icon/icon.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -412,6 +415,16 @@ void chat_with_deepseek(const AppConfig &config, const std::string& message) {
     auto_save_chat_history();
 }
 
+void set_icon(GLFWwindow *window) {
+    int width, height, channels;
+    unsigned char* pixels = stbi_load_from_memory(ds_cpp_64_png, ds_cpp_64_png_len, &width, &height, &channels, 4);
+    GLFWimage icon{
+        width, height, pixels
+    };
+    glfwSetWindowIcon(window, 1, &icon);
+    stbi_image_free(pixels);
+}
+
 // 主函数
 int main(int argc, char **argv) {
 #ifdef _WIN32
@@ -471,6 +484,9 @@ int main(int argc, char **argv) {
         glfwTerminate();
         return -1;
     }
+
+    set_icon(window);
+
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1); // 启用垂直同步
 

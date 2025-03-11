@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="256"
+   height="256"
+   viewBox="0 0 256 256"
+   version="1.1"
+   id="svg1"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <g
+     id="layer1">
+    <text
+       xml:space="preserve"
+       style="font-size:129.698px;font-family:Libertinus;-inkscape-font-specification:Libertinus;text-align:end;writing-mode:lr-tb;direction:ltr;text-anchor:end;fill:#000000;stroke:#000000;stroke-width:18.3824"
+       x="128.02356"
+       y="68.194046"
+       id="text1"><tspan
+         id="tspan1"
+         x="128.02356"
+         y="68.194046"
+         style="text-align:center;text-anchor:middle;stroke-width:18.3824"
+         dx="0"
+         dy="51.579174">DS</tspan><tspan
+         x="128.02356"
+         y="230.31654"
+         id="tspan2"
+         style="text-align:center;text-anchor:middle;stroke-width:18.3824">CPP</tspan></text>
+  </g>
+</svg>

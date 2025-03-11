@@ -49,6 +49,7 @@ Download source code tarballs of the following dependencies, and put them in `th
 4. [glfw v3.4](https://github.com/glfw/glfw/releases/tag/3.4)
 5. [nlohmann_json v3.11.3](https://github.com/nlohmann/json/archive/refs/tags/v3.11.3.tar.gz)
 6. [ImGuiFileDialog v0.6.7](https://github.com/aiekick/ImGuiFileDialog/archive/refs/tags/v0.6.7.tar.gz)
+7. [stb_image.h](https://github.com/nothings/stb/blob/master/stb_image.h)
 
 ```
 thirdparty
@@ -57,7 +58,8 @@ thirdparty
 ├── glfw
 ├── ImGuiFileDialog
 ├── nlohmann_json
-└── imgui
+├── imgui
+└── stb/stb_image.h
 ```
 
 ### Compile
